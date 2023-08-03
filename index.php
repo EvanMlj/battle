@@ -3,6 +3,22 @@ require_once __DIR__ . '/vendor/autoload.php';
 require "lib.php";
 session_start();
 
+$serveurName = 'localhost' ;
+$user = 'root' ;
+
+//Connection 
+try{
+    $conn = new PDO("mysql:host=$serveurName;dbname=battle", $user) ;
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION) ;
+    echo 'connexion réussie' ;
+}
+catch(PDOException $e){
+    echo "Erreur : " . $e->getMessage();
+  }
+
+
+
+
 // CONTROLLER gestion de la logique
 // Gestion de mon formulaire de création de personnage
 if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST["fight"])) {
