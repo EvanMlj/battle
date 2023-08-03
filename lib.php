@@ -120,3 +120,4 @@ function soin()
     setInfoInSession($player, $adversaire, $combats);
     adversaireAction();
 }
+
