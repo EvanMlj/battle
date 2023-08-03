@@ -3,11 +3,18 @@ require_once __DIR__ . '/vendor/autoload.php';
 require "lib.php";
 session_start();
 
+try {
 $serveurName = 'localhost';
 $user = 'root';
-
-
-
+//Connection au serveur
+// Message en echo si connexion non reussi
+    $conn = new PDO("mysql:host=$serveurName;dbname=battle", $user);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    echo 'connexion réussie';
+    // dump($connexionReussie) ; 
+} catch (PDOException $e) {
+    echo "Erreur : " . $e->getMessage();
+}
 
 
 // CONTROLLER gestion de la logique
@@ -16,6 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST["fight"])) {
     list($formErrors, $player, $adversaire) = checkErrorsForm();
     if (empty($formErrors)) {
         setInfoInSession($player, $adversaire, []);
+        newPersonnage($conn, $player) ; 
     }
 }
 
@@ -37,28 +45,7 @@ list($player, $adversaire, $combats) = getInfoInSession();
 $combatIsBegin = $player && $adversaire;
 $winner = $_SESSION["winner"] ?? null;
 
-//Connection au serveur
-// Message en echo si connexion non reussi
-try {
-    $conn = new PDO("mysql:host=$serveurName;dbname=battle", $user);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    echo 'connexion réussie';
-    $sth = $conn->prepare("
-        INSERT INTO personnage ( `name`, `create_at_date`, `attaque`, `mana`, `sante`)
-        VALUES ( :name, :create_at_date, :attaque, :mana, :sante)
-    ") ; 
-    $sth-> execute (array(
-                        ':name' => $player['name'] ,
-                        ':create_at_date' => date("Y/m/d"),
-                        ':attaque' => $player['attaque'],
-                        ':mana' => $player['mana'],
-                        ':sante' => $player['sante']
-    )) ; 
-        echo 'perso ajouté à la table' ;
 
-} catch (PDOException $e) {
-    echo "Erreur : " . $e->getMessage();
-}
 
 ?>
 
@@ -105,6 +92,7 @@ try {
                                     <option selected value></option>
                                     <option value="1">Batman</option>
                                     <option value="2">Superman</option>
+                                    <!-- <option value=""></option> -->
                                 </select>
                             </div>
                         </div>

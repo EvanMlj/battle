@@ -121,3 +121,20 @@ function soin()
     adversaireAction();
 }
 
+
+function newPersonnage($conn, $player)
+{
+    $sth = $conn->prepare("
+            INSERT INTO personnage ( `name`, `create_at_date`, `attaque`, `mana`, `sante`)
+            VALUES ( :name, :create_at_date, :attaque, :mana, :sante)
+        ");
+            $sth->execute(array(
+                ':name' => $player['name'],
+                ':create_at_date' => date("Y/m/d"),
+                ':attaque' => $player['attaque'],
+                ':mana' => $player['mana'],
+                ':sante' => $player['sante']
+            ));
+            echo 'perso ajouté à la table';
+}
+
