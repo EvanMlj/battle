@@ -10,21 +10,27 @@ $user = 'root';
 // Message en echo si connexion non reussi
     $conn = new PDO("mysql:host=$serveurName;dbname=battle", $user);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    echo 'connexion réussie';
+    echo 'connexion réussie <br>';
     // dump($connexionReussie) ; 
 } catch (PDOException $e) {
     echo "Erreur : " . $e->getMessage();
 }
 
-
+$shouldAddNewPersonnage = false;
 // CONTROLLER gestion de la logique
 // Gestion de mon formulaire de création de personnage
 if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST["fight"])) {
     list($formErrors, $player, $adversaire) = checkErrorsForm();
     if (empty($formErrors)) {
         setInfoInSession($player, $adversaire, []);
-        newPersonnage($conn, $player) ; 
+        $shouldAddNewPersonnage = !IsPersonnageExists($conn, $player) ;
     }
+}
+
+if ($shouldAddNewPersonnage) {
+    addNewPersonnage($conn, $player);
+} else {
+    echo 'Personnage déjà présent dans la base de données.';
 }
 
 if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST["attaque"])) {
@@ -90,9 +96,8 @@ $winner = $_SESSION["winner"] ?? null;
                                 <label class="form-label">Sélectionner un joueur existant</label>
                                 <select class="form-select" name="player[id]" id="selectPlayer">
                                     <option selected value></option>
-                                    <option value="1">Batman</option>
-                                    <option value="2">Superman</option>
-                                    <!-- <option value=""></option> -->
+                                    <option value="1"></option>
+                                   
                                 </select>
                             </div>
                         </div>

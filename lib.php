@@ -121,20 +121,33 @@ function soin()
     adversaireAction();
 }
 
+function IsPersonnageExists($conn, $player){
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM personnage WHERE `name` = :name AND `attaque` = :attaque AND `mana` = :mana AND `sante` = :sante");
+    $stmt->execute(array(
+        ':name' => $player['name'],
+        ':attaque' => $player['attaque'],
+        ':mana' => $player['mana'],
+        ':sante' => $player['sante']
+    ));
 
-function newPersonnage($conn, $player)
-{
-    $sth = $conn->prepare("
-            INSERT INTO personnage ( `name`, `create_at_date`, `attaque`, `mana`, `sante`)
-            VALUES ( :name, :create_at_date, :attaque, :mana, :sante)
-        ");
-            $sth->execute(array(
-                ':name' => $player['name'],
-                ':create_at_date' => date("Y/m/d"),
-                ':attaque' => $player['attaque'],
-                ':mana' => $player['mana'],
-                ':sante' => $player['sante']
-            ));
-            echo 'perso ajouté à la table';
+    $count = $stmt->fetchColumn();
+
+    return $count > 0 ;
 }
 
+function addNewPersonnage($conn, $player)
+{
+    $sth = $conn->prepare("
+        INSERT INTO personnage (`name`, `create_at_date`, `attaque`, `mana`, `sante`)
+        VALUES (:name, :create_at_date, :attaque, :mana, :sante)
+    ");
+    $sth->execute(array(
+        ':name' => $player['name'],
+        ':create_at_date' => date("Y/m/d"),
+        ':attaque' => $player['attaque'],
+        ':mana' => $player['mana'],
+        ':sante' => $player['sante']
+    ));
+
+    echo 'Personnage ajouté à la table.';
+}
