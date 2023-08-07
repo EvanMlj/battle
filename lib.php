@@ -23,6 +23,10 @@ function removeInfoInSession(): void
 
 function checkErrorsForm(): array
 {
+    if (is_numeric($_POST['player']['id'])) {
+        return [[], $_POST['player'], $_POST['adversaire']];
+    }
+
     $formErrors = [];
     $player = $_POST['player'];
     $adversaire = $_POST['adversaire'];
@@ -121,33 +125,41 @@ function soin()
     adversaireAction();
 }
 
-function IsPersonnageExists($conn, $player){
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM personnage WHERE `name` = :name AND `attaque` = :attaque AND `mana` = :mana AND `sante` = :sante");
-    $stmt->execute(array(
-        ':name' => $player['name'],
-        ':attaque' => $player['attaque'],
-        ':mana' => $player['mana'],
-        ':sante' => $player['sante']
-    ));
-
-    $count = $stmt->fetchColumn();
-
-    return $count > 0 ;
-}
-
-function addNewPersonnage($conn, $player)
+function addNewPersonnage($conn, $player, string $type = "player"): array
 {
+    unset($player["initial_life"]);
+    unset($player["id"]);
     $sth = $conn->prepare("
         INSERT INTO personnage (`name`, `create_at_date`, `attaque`, `mana`, `sante`)
         VALUES (:name, :create_at_date, :attaque, :mana, :sante)
     ");
-    $sth->execute(array(
-        ':name' => $player['name'],
-        ':create_at_date' => date("Y/m/d"),
-        ':attaque' => $player['attaque'],
-        ':mana' => $player['mana'],
-        ':sante' => $player['sante']
-    ));
+    $player["create_at_date"] = date("Y/m/d");
+    $sth->execute($player);
+    $lastID = $conn->lastInsertId();
+    return getPlayer($conn, $lastID);
+}
 
-    echo 'Personnage ajouté à la table.';
+function getPlayers($conn)
+{
+    $stmt = $conn->prepare("SELECT id_personnage, name FROM personnage");
+    $stmt->execute();
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($result as $row) {
+        echo '<option value="' . $row['id_personnage'] . '">' . $row['name'] . '</option>';
+    }
+}
+
+function getPlayer($conn, $id): bool|array
+{
+    $stmt = $conn->prepare("SELECT * FROM personnage where id_personnage = :id");
+    $stmt->execute(['id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function getPlayerByName($conn, $name): bool|array
+{
+    $stmt = $conn->prepare("SELECT * FROM personnage where name = :name");
+    $stmt->execute(['name' => $name]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }

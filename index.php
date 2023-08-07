@@ -4,10 +4,10 @@ require "lib.php";
 session_start();
 
 try {
-$serveurName = 'localhost';
-$user = 'root';
-//Connection au serveur
-// Message en echo si connexion non reussi
+    $serveurName = 'localhost';
+    $user = 'root';
+    //Connection au serveur
+    // Message en echo si connexion non reussi
     $conn = new PDO("mysql:host=$serveurName;dbname=battle", $user);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     echo 'connexion réussie <br>';
@@ -22,16 +22,29 @@ $shouldAddNewPersonnage = false;
 if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST["fight"])) {
     list($formErrors, $player, $adversaire) = checkErrorsForm();
     if (empty($formErrors)) {
+        if (is_numeric($player['id'])) {
+            $player = getPlayer($conn, $player['id']);
+        } else {
+            $player = getPlayerByName($conn, $player["name"]);
+            if (!$player_exist) {
+                $player = addNewPersonnage($conn, $player);
+            }
+        }
+
+        if (is_numeric($adversaire['id'])) {
+            $adversaire = getPlayer($conn, $adversaire['id']);
+        } else {
+            $adversaire = getPlayerByName($conn, $adversaire["name"]);
+            if (!$adversaire_exist) {
+                $adversaire = addNewPersonnage($conn, $adversaire, "adversaire");
+            }
+        }
+
         setInfoInSession($player, $adversaire, []);
-        $shouldAddNewPersonnage = !IsPersonnageExists($conn, $player) ;
     }
 }
 
-if ($shouldAddNewPersonnage) {
-    addNewPersonnage($conn, $player);
-} else {
-    echo 'Personnage déjà présent dans la base de données.';
-}
+
 
 if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST["attaque"])) {
     attaque();
@@ -48,6 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST["restart"])) {
 
 // GESTION DE LA VUE
 list($player, $adversaire, $combats) = getInfoInSession();
+dump($_SESSION);
 $combatIsBegin = $player && $adversaire;
 $winner = $_SESSION["winner"] ?? null;
 
@@ -95,9 +109,11 @@ $winner = $_SESSION["winner"] ?? null;
                             <div class="col-6">
                                 <label class="form-label">Sélectionner un joueur existant</label>
                                 <select class="form-select" name="player[id]" id="selectPlayer">
-                                    <option selected value></option>
-                                    <option value="1"></option>
-                                   
+                                    <option selected value=""></option>
+                                    <?php
+                                    getPlayers($conn);
+                                    ?>
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -136,8 +152,7 @@ $winner = $_SESSION["winner"] ?? null;
                                 <label class="form-label">Sélectionner un adversaire existant</label>
                                 <select class="form-select" name="adversaire[id]" id="selectAdversaire">
                                     <option selected value></option>
-                                    <option value="1">Batman</option>
-                                    <option value="2">Superman</option>
+                                    <?php getPlayers($conn); ?>
                                 </select>
                             </div>
                         </div>
